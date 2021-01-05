@@ -11,6 +11,8 @@ class Indexer:
     def __init__(self, config):
         self.inverted_idx = {}
         self.postingDict = {}
+        self.terms_in_docs = {}
+        self.weight_of_docs = {}
         self.config = config
 
     # DO NOT MODIFY THIS SIGNATURE
@@ -34,10 +36,14 @@ class Indexer:
                 else:
                     self.inverted_idx[term] += 1
 
-                self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
+                f_ij = document_dictionary[term]
+                tf_ij = f_ij / len(document_dictionary.keys())
+                self.postingDict[term].append([document.tweet_id, document_dictionary[term], ])
 
             except:
                 print('problem with the following key {}'.format(term[0]))
+        self.terms_in_docs[document.tweet_id] = list(document_dictionary.keys())
+
 
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.

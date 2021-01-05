@@ -85,9 +85,7 @@ class SearchEngine:
     def run_engine(self):
         self.build_index_from_parquet(self._config.get__corpusPath())
 
-
-
-def main(self):
+def main():
     config = ConfigClass()
     search_engine = SearchEngine(config)
     search_engine.run_engine()
