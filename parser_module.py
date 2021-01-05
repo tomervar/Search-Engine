@@ -445,15 +445,11 @@ class Parse:
         tokenized_text = self.parse_sentence(full_text)
         doc_length = len(tokenized_text)  # after text operations.
 
-        postions_dict = {}
-
         for idx, term in enumerate(tokenized_text):
             if term not in term_dict.keys():
                 term_dict[term] = 1
-                postions_dict[term] = [idx]
             else:
                 term_dict[term] += 1
-                postions_dict[term].append(idx)
 
         unique_words = len(term_dict)
 
@@ -463,5 +459,5 @@ class Parse:
             tf_max = max(term_dict.values())
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length, postions_dict, tf_max, unique_words)
+                            quote_url, term_dict, doc_length, tf_max, unique_words)
         return document
