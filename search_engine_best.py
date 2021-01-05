@@ -4,6 +4,7 @@ from configuration import ConfigClass
 from parser_module import Parse
 from indexer import Indexer
 from searcher import Searcher
+import collections
 import utils
 
 
@@ -17,6 +18,7 @@ class SearchEngine:
         self._parser = Parse()
         self._indexer = Indexer(config)
         self._model = None
+        self.number_of_documents_in_corpus = 0
 
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.
@@ -31,13 +33,14 @@ class SearchEngine:
         df = pd.read_parquet(fn, engine="pyarrow")
         documents_list = df.values.tolist()
         # Iterate over every document in the file
-        number_of_documents = 0
         for idx, document in enumerate(documents_list):
             # parse the document
             parsed_document = self._parser.parse_doc(document)
-            number_of_documents += 1
+            self.number_of_documents_in_corpus += 1
             # index the document data
             self._indexer.add_new_doc(parsed_document)
+
+        self._indexer.inverted_idx = collections.OrderedDict(sorted(self._indexer.inverted_idx.items()))
         print('Finished parsing and indexing.')
 
     # DO NOT MODIFY THIS SIGNATURE
@@ -75,3 +78,17 @@ class SearchEngine:
         """
         searcher = Searcher(self._parser, self._indexer, model=self._model)
         return searcher.search(query)
+
+    def read_queries(self):
+        pass
+
+    def run_engine(self):
+        self.build_index_from_parquet(self._config.get__corpusPath())
+
+
+
+def main(self):
+    config = ConfigClass()
+    search_engine = SearchEngine(config)
+    search_engine.run_engine()
+
