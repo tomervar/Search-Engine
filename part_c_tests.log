@@ -1,0 +1,5 @@
+ERROR 2020-12-31 20:57:52,154: report_part_c.docx does not exist.
+ERROR 2020-12-31 20:57:52,170: search_engine_1.py does not exist.
+ERROR 2020-12-31 20:57:52,170: search_engine_2.py does not exist.
+ERROR 2020-12-31 20:58:02,395: idx_bench.pkl does not exist.
+DEBUG 2020-12-31 20:58:02,395: Total runtime was: 0:00:10.241432
