@@ -40,7 +40,10 @@ class SearchEngine:
             # index the document data
             self._indexer.add_new_doc(parsed_document)
 
+        self._indexer.add_idf_to_inverted_index(self.number_of_documents_in_corpus)
+        self._indexer.build_weight_of_docs()
         self._indexer.inverted_idx = collections.OrderedDict(sorted(self._indexer.inverted_idx.items()))
+        self._indexer.postingDict = collections.OrderedDict(sorted(self._indexer.postingDict.items()))
         print('Finished parsing and indexing.')
 
     # DO NOT MODIFY THIS SIGNATURE
@@ -78,9 +81,6 @@ class SearchEngine:
         """
         searcher = Searcher(self._parser, self._indexer, model=self._model)
         return searcher.search(query)
-
-    def read_queries(self):
-        pass
 
     def run_engine(self):
         self.build_index_from_parquet(self._config.get__corpusPath())

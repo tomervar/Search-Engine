@@ -15,7 +15,6 @@ class Document:
         :param quote_url: quote url
         :param term_doc_dictionary: dictionary of term and documents.
         :param doc_length: doc length
-        :param positions: list of the positions of the term in the parsed doc
         :param max_tf: max appearances of term in the parsed doc
         :param unique_words_number: number of unique terms in the parsed doc
         """

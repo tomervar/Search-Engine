@@ -38,12 +38,36 @@ class Indexer:
 
                 f_ij = document_dictionary[term]
                 tf_ij = f_ij / len(document_dictionary.keys())
-                self.postingDict[term].append([document.tweet_id, document_dictionary[term], ])
+                self.postingDict[term].append([document.tweet_id, document_dictionary[term], tf_ij, document.tweet_date])
 
             except:
                 print('problem with the following key {}'.format(term[0]))
         self.terms_in_docs[document.tweet_id] = list(document_dictionary.keys())
 
+    def add_idf_to_inverted_index(self, corpus_size):
+        for term in self.inverted_idx.keys():
+            d_ft = self.inverted_idx[term]
+            idf_t = math.log2((corpus_size/d_ft))
+            self.inverted_idx[term] = (d_ft, idf_t)
+
+    def build_weight_of_docs(self):
+        for tweet_id in self.terms_in_docs.keys():
+            segma_w_ij_pow_of_doc = 0
+            for term in self.terms_in_docs[tweet_id]:
+                for list_in_posting in self.postingDict[term]:
+                    if tweet_id == list_in_posting[0]:
+                        tf = list_in_posting[2]
+                        idf = self.inverted_idx[term][1]
+                        tf_idf = tf * idf
+                        list_in_posting.append(tf_idf)
+                        tf_idf_pow = math.pow(tf_idf, 2)
+                        segma_w_ij_pow_of_doc += tf_idf_pow
+                        break
+
+            sqrt_of_segma_w_ij_pow = math.sqrt(segma_w_ij_pow_of_doc)
+            self.weight_of_docs[tweet_id] = sqrt_of_segma_w_ij_pow
+
+        self.terms_in_docs = {}
 
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.
