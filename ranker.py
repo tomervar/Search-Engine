@@ -24,6 +24,8 @@ class Ranker:
     def rank_tf_idf_query(self, query_as_dict, query_len):
         query_term_weights_dict = {}
         for term in query_as_dict:
+            if term not in self.indexer.inverted_idx:
+                continue
             tf = query_as_dict[term]/query_len
             idf = self.indexer.inverted_idx[term][1]
             w_iq = tf * idf
