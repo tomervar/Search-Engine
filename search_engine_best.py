@@ -84,8 +84,9 @@ class SearchEngine:
             and the last is the least relevant result.
         """
         searcher = Searcher(self._parser, self._indexer, model=self._model)
-        searcher.set_thesaurus()
+        # searcher.set_thesaurus()
         searcher.set_spelling_correction()
+        searcher.set_wordNet()
         return searcher.search(query)
 
 

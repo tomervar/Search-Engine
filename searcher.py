@@ -6,7 +6,9 @@ from nltk.corpus import lin_thesaurus as thes
 from nltk import pos_tag
 # nltk.download('averaged_perceptron_tagger')
 # nltk.download('lin_thesaurus')
+# nltk.download('wordnet')
 from spellchecker import SpellChecker
+from nltk.corpus import wordnet
 
 
 # DO NOT MODIFY CLASS NAME
@@ -23,12 +25,16 @@ class Searcher:
         self._model = model
         self.with_thesaurus = False
         self.with_spelling_correction = False
+        self.with_wordNet = False
 
     def set_thesaurus(self):
         self.with_thesaurus = True
 
     def set_spelling_correction(self):
         self.with_spelling_correction = True
+
+    def set_wordNet(self):
+        self.with_wordNet = True
 
     def spelling_correction_checker(self, query_as_list):
         spell = SpellChecker()
@@ -39,6 +45,40 @@ class Searcher:
                     correct_word = spell.correction(word)
                     if correct_word in self._indexer.inverted_idx:
                         query_as_list[idx] = correct_word
+
+
+    def build_wordNet_for_query(self,query_as_dict):
+        list_of_terms = list(query_as_dict.keys())
+        for term in list_of_terms:
+            syn = True
+            ant = True
+            for synset in wordnet.synsets(term):
+                for lemma in synset.lemmas():
+                    if syn:
+                        lemma_name = lemma.name()
+                        if not lemma_name.startswith(term):
+                            if lemma_name.upper() in self._indexer.inverted_idx:
+                                lemma_name = lemma_name.upper()
+                            if lemma_name in self._indexer.inverted_idx:
+                                if lemma_name in query_as_dict:
+                                    query_as_dict[lemma_name] += 0.5
+                                else:
+                                    query_as_dict[lemma_name] = 0.5
+                                syn = False
+                    lemma_antonyms = lemma.antonyms()
+                    if ant and lemma_antonyms:
+                        lemma_antonyms_name = lemma_antonyms[0].name()
+                        if lemma_antonyms_name.upper() in self._indexer.inverted_idx:
+                            lemma_antonyms_name = lemma_antonyms_name.upper()
+                        if lemma_antonyms_name in self._indexer.inverted_idx:
+                            if lemma_antonyms_name in query_as_dict:
+                                query_as_dict[lemma_antonyms_name] += 0.4
+                            else:
+                                query_as_dict[lemma_antonyms_name] = 0.4
+                            ant = False
+
+                if not ant and not syn:
+                    break
 
     def build_thesaurus_for_query(self, query_as_dict, query):
         list_of_terms = list(query_as_dict.keys())
@@ -98,6 +138,8 @@ class Searcher:
         if self.with_thesaurus:
             self.build_thesaurus_for_query(query_as_dict, query)
 
+        if self.with_wordNet:
+            self.build_wordNet_for_query(query_as_dict)
 
         relevant_docs = self._relevant_docs_from_posting(query_as_dict, len(query_as_list), query_len_before_thes)
         n_relevant = len(relevant_docs)
