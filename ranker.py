@@ -17,6 +17,13 @@ class Ranker:
         :return: sorted list of documents by score
         """
         ranked_results = sorted(relevant_docs.items(), key=lambda item: item[1], reverse=True)
+        ranked_results_cut = []
+        for idx, doc_tuple in enumerate(ranked_results):
+            if doc_tuple[1][0] <= 0.1:
+                ranked_results_cut = ranked_results[:idx]
+                break
+        if len(ranked_results_cut) > 0:
+            ranked_results = ranked_results_cut
         if k is not None:
             ranked_results = ranked_results[:k]
         return [d[0] for d in ranked_results]
