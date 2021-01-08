@@ -49,7 +49,9 @@ class Searcher:
 
     def build_wordNet_for_query(self,query_as_dict):
         list_of_terms = list(query_as_dict.keys())
-        for term in list_of_terms:
+        for idx, term in enumerate(list_of_terms):
+            if idx % 2 != 0:
+                continue
             syn = True
             ant = True
             for synset in wordnet.synsets(term):
@@ -143,7 +145,7 @@ class Searcher:
 
         relevant_docs = self._relevant_docs_from_posting(query_as_dict, len(query_as_list), query_len_before_thes)
         n_relevant = len(relevant_docs)
-        ranked_doc_ids = Ranker.rank_relevant_docs(relevant_docs)
+        ranked_doc_ids = Ranker.rank_relevant_docs(relevant_docs, k)
         return n_relevant, ranked_doc_ids
 
     # feel free to change the signature and/or implementation of this function 
@@ -167,15 +169,26 @@ class Searcher:
                     relevant_docs_with_weight[doc_id][1].append((term, w_ij))
                 else:
                     relevant_docs_with_weight[doc_id] = [doc_date, [(term, w_ij)]]
-
+        doc_id_to_cosine_and_inner = {}
+        max_inner_product = 0
         for doc_id in relevant_docs_with_weight:
-            if len(relevant_docs_with_weight[doc_id]) > (query_len_before_thes*(10/100)):
-                cos_sim = self._ranker.calculate_cos_sim(query_term_weights_dict, relevant_docs_with_weight[doc_id][1], doc_id)
-                relevant_docs[doc_id] = (cos_sim, relevant_docs_with_weight[doc_id][0])
-            elif query_len_before_thes < 10:
-                cos_sim = self._ranker.calculate_cos_sim(query_term_weights_dict, relevant_docs_with_weight[doc_id][1], doc_id)
-                relevant_docs[doc_id] = (cos_sim, relevant_docs_with_weight[doc_id][0])
-
+            if len(relevant_docs_with_weight[doc_id][1]) > (query_len_before_thes*(40/100)):
+                cos_sim, inner_product = self._ranker.calculate_cos_sim(query_term_weights_dict, relevant_docs_with_weight[doc_id][1], doc_id)
+                doc_id_to_cosine_and_inner[doc_id] = (cos_sim, relevant_docs_with_weight[doc_id][0], inner_product)
+                if max_inner_product < inner_product:
+                    max_inner_product = inner_product
+            elif query_len_before_thes < 4:
+                cos_sim, inner_product = self._ranker.calculate_cos_sim(query_term_weights_dict, relevant_docs_with_weight[doc_id][1], doc_id)
+                doc_id_to_cosine_and_inner[doc_id] = (cos_sim, relevant_docs_with_weight[doc_id][0], inner_product)
+                if max_inner_product < inner_product:
+                    max_inner_product = inner_product
             # cos_sim = self._ranker.calculate_cos_sim(query_term_weights_dict, relevant_docs_with_weight[doc_id][1], doc_id)
             # relevant_docs[doc_id] = (cos_sim, relevant_docs_with_weight[doc_id][0])
+        for doc_id in doc_id_to_cosine_and_inner:
+            tup = doc_id_to_cosine_and_inner[doc_id]
+            cos_sim = tup[0]
+            date = tup[1]
+            inner_product = tup[2]
+            rank = self._ranker.rank_combine(cos_sim, inner_product, max_inner_product)
+            relevant_docs[doc_id] = (rank, date)
         return relevant_docs

@@ -22,6 +22,7 @@ def load_obj(name):
     :return: loaded pickle file
     """
     with open(name + '.pkl', 'rb') as f:
+    # with open(name, 'rb') as f:
         return pickle.load(f)
 
 
