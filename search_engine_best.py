@@ -40,8 +40,12 @@ class SearchEngine:
             # index the document data
             self._indexer.add_new_doc(parsed_document)
 
+        self._indexer.handle_capital_letters(self._parser)
         self._indexer.add_idf_to_inverted_index(self.number_of_documents_in_corpus)
         self._indexer.build_weight_of_docs()
+
+        self._indexer.remove_all_the_term_with_1_appearance()
+
         self._indexer.inverted_idx = collections.OrderedDict(sorted(self._indexer.inverted_idx.items()))
         self._indexer.postingDict = collections.OrderedDict(sorted(self._indexer.postingDict.items()))
         print('Finished parsing and indexing.')
@@ -84,11 +88,4 @@ class SearchEngine:
         searcher.set_spelling_correction()
         return searcher.search(query)
 
-    def run_engine(self):
-        self.build_index_from_parquet(self._config.get__corpusPath())
-
-def main():
-    config = ConfigClass()
-    search_engine = SearchEngine(config)
-    search_engine.run_engine()
 

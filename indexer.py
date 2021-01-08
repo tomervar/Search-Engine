@@ -37,6 +37,7 @@ class Indexer:
                     self.inverted_idx[term] += 1
 
                 f_ij = document_dictionary[term]
+                # tf_ij = f_ij / document.max_tf
                 tf_ij = f_ij / len(document_dictionary.keys())
                 self.postingDict[term].append([document.tweet_id, document_dictionary[term], tf_ij, document.tweet_date])
 
@@ -54,6 +55,8 @@ class Indexer:
         for tweet_id in self.terms_in_docs.keys():
             segma_w_ij_pow_of_doc = 0
             for term in self.terms_in_docs[tweet_id]:
+                if term.upper() in self.postingDict:
+                    term = term.upper()
                 for list_in_posting in self.postingDict[term]:
                     if tweet_id == list_in_posting[0]:
                         tf = list_in_posting[2]
@@ -69,6 +72,18 @@ class Indexer:
 
         self.terms_in_docs = {}
 
+    def handle_capital_letters(self, parser):
+        # remove from upper case dict all the falses and update inverted and posting
+        list_of_upper_case = list(parser.upper_case_dict.keys())
+        for word in list_of_upper_case:
+            if not parser.upper_case_dict[word]:
+                parser.upper_case_dict.pop(word)
+            else:
+                self.inverted_idx[word.upper()] = self.inverted_idx[word]
+                self.postingDict[word.upper()] = self.postingDict[word]
+                self.inverted_idx.pop(word)
+                self.postingDict.pop(word)
+
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.
     def load_index(self, fn):
@@ -77,7 +92,7 @@ class Indexer:
         Input:
             fn - file name of pickled index.
         """
-        raise NotImplementedError
+        return utils.load_obj(fn)
 
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.
@@ -87,7 +102,7 @@ class Indexer:
         Input:
               fn - file name of pickled index.
         """
-        raise NotImplementedError
+        utils.save_obj(self.inverted_idx, fn)
 
     # feel free to change the signature and/or implementation of this function 
     # or drop altogether.
@@ -104,3 +119,10 @@ class Indexer:
         Return the posting list from the index for a term.
         """
         return self.postingDict[term] if self._is_term_exist(term) else []
+
+    def remove_all_the_term_with_1_appearance(self):
+        list_of_terms = list(self.inverted_idx.keys())
+        for term in list_of_terms:
+            if self.inverted_idx[term][0] == 1:
+                self.inverted_idx.pop(term)
+                self.postingDict.pop(term)
