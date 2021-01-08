@@ -56,5 +56,13 @@ class Ranker:
 
         cos_sim_normalization = doc_sqrt_segma_wij_pow * sqrt_segma_w_iq_pow
         cos_sim = inner_product/cos_sim_normalization
-        return cos_sim
+        return cos_sim, inner_product
+
+    def rank_combine(self, cos_sim, inner_product, max_inner_product):
+        inner_product_between_0_1 = inner_product/max_inner_product
+        rank = (cos_sim*0.8)
+        rank += (inner_product_between_0_1*0.2)
+        return rank
+
+
 

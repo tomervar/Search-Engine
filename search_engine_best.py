@@ -49,6 +49,7 @@ class SearchEngine:
         self._indexer.inverted_idx = collections.OrderedDict(sorted(self._indexer.inverted_idx.items()))
         self._indexer.postingDict = collections.OrderedDict(sorted(self._indexer.postingDict.items()))
         print('Finished parsing and indexing.')
+        # self._indexer.save_index("idx_bench")
 
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.
@@ -84,9 +85,9 @@ class SearchEngine:
             and the last is the least relevant result.
         """
         searcher = Searcher(self._parser, self._indexer, model=self._model)
-        # searcher.set_thesaurus()
         searcher.set_spelling_correction()
         searcher.set_wordNet()
+
         return searcher.search(query)
 
 
