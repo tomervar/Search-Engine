@@ -18,6 +18,7 @@ class Ranker:
         """
         ranked_results = sorted(relevant_docs.items(), key=lambda item: item[1], reverse=True)
         ranked_results_cut = []
+        # clear all the low similarity retrieved docs to get higher precision.
         for idx, doc_tuple in enumerate(ranked_results):
             if doc_tuple[1][0] <= 0.1:
                 ranked_results_cut = ranked_results[:idx]
@@ -29,8 +30,15 @@ class Ranker:
         return [d[0] for d in ranked_results]
 
     def rank_tf_idf_query(self, query_as_dict, query_len):
+        """
+        calculate tf-idf for each term in query
+        :param query_as_dict: {term : num of appearances in query}
+        :param query_len: the length of the parsed query.
+        :return:
+        """
         query_term_weights_dict = {}
         for term in query_as_dict:
+            # if term not in inverted index then this term has no impact on the retrieved docs.
             if term not in self.indexer.inverted_idx:
                 continue
             tf = query_as_dict[term]/query_len
@@ -40,8 +48,16 @@ class Ranker:
         return query_term_weights_dict
 
     def calculate_cos_sim(self, query_term_weights_dict, term_in_docs_tuple_list, doc_id):
+        """
+        calculate cos-sim between doc and the query.
+        :param query_term_weights_dict: {term : w_iq ...}
+        :param term_in_docs_tuple_list: [(term, w_ij) ...]
+        :param doc_id:
+        :return: cos_sim and inner product
+        """
         inner_product = 0
         segma_w_iq_pow = 0
+        # calculate inner product
         for term in query_term_weights_dict:
             w_iq = query_term_weights_dict[term]
             for tuple_term in term_in_docs_tuple_list:
@@ -49,6 +65,7 @@ class Ranker:
                     w_ij = tuple_term[1]
                     inner_product += w_ij * w_iq
                     break
+            # calculation for the normalization of the cos-sim
             segma_w_iq_pow += math.pow(w_iq, 2)
 
         doc_sqrt_segma_wij_pow = self.indexer.weight_of_docs[doc_id]
@@ -59,6 +76,13 @@ class Ranker:
         return cos_sim, inner_product
 
     def rank_combine(self, cos_sim, inner_product, max_inner_product):
+        """
+        calcute the similarity between query and doc with combination of methods to retrieve better results.
+        :param cos_sim: the similarity in cos-sim method
+        :param inner_product: the similarity in inner product method
+        :param max_inner_product: the higher inner product similarity that we found for all docs.
+        :return:
+        """
         inner_product_between_0_1 = inner_product/max_inner_product
         rank = (cos_sim*0.8)
         rank += (inner_product_between_0_1*0.2)

@@ -32,6 +32,7 @@ class Parse:
                             "&", "~", "/", "=", "+", "|", "^", "*", "<", ">", "`"]
         self.with_stemmer = with_stemmer
         self.stemmer = Stemmer()
+        # dict of months to change the date in the documents.
         self.month_dict = {
                     'Jan': "01",
                     'Feb': "02",
@@ -56,7 +57,6 @@ class Parse:
         t = RegexpTokenizer('\s+', gaps=True)  # split with spaces.
 
         text_tokens = t.tokenize(text)
-        # text_tokens = t.tokenize("https://moodle2.bgu.ac.il/moodle/pluginfile.php/2563977/mod_resource/content/1/02%20search%20engines%20a2z.pdf")
         text_tokens_without_stopwords = []  # the list that we will return to search_engine
         for term in text_tokens:
             while len(term) > 0 and (term[0] in self.punctuation or not term[0].isascii()):
@@ -142,6 +142,7 @@ class Parse:
 
             # handle tags
             elif term.startswith("@") and len(term) > 1:
+                # clear all the repeating tags
                 last_tag = 0
                 for idx, ch in enumerate(term):
                     if term[idx] == "@":
@@ -152,6 +153,7 @@ class Parse:
 
             # if hashtag
             elif term.startswith("#") and len(term) > 1:
+                # clear all the repeating hashtags
                 last_hashtag = 0
                 for idx, ch in enumerate(term):
                     if term[idx] == "#":
@@ -270,7 +272,7 @@ class Parse:
         """
         num_to_add = ""
 
-        if num < 0.001 :
+        if num < 0.001:
             num = 0.0
         # if the number divide by thousand
         if num/1000 >= 1:
@@ -331,25 +333,30 @@ class Parse:
         # loop over each sub group and add it to list_of_new_terms if not none
         for i in range(1, group_number+1):
             curr_group = pattern.group(i)
-            if curr_group is not None and i == group_number: ################# change tomer need to check!!!!!!!!
+            if curr_group is not None and i == group_number:
                 list_of_new_terms.append(curr_group.lower())
                 return list_of_new_terms
 
-        # catch the short url and cut it from the full url.
-        matched_url = pattern.group(0)
-        new_term = term[len(matched_url):]
-
-        # loop over the rest of the url and add it to list_of_new_terms, ignoring no digit or no letter chars.
-        start_index_curr_term = 0
-        for idx, charr in enumerate(new_term + " "):
-            if not charr.isalpha() and not charr.isdigit():
-                if start_index_curr_term == idx:
-                    start_index_curr_term += 1
-                else:
-                    list_of_new_terms.append(new_term[start_index_curr_term:idx])
-                    start_index_curr_term = idx+1
-
-        return list_of_new_terms
+        """
+        the following code, add to the list all the parts of the url.
+        if we want the all parts, uncomment the code and remove the return from above,
+        and the after and term.
+        """
+        # # catch the short url and cut it from the full url.
+        # matched_url = pattern.group(0)
+        # new_term = term[len(matched_url):]
+        #
+        # # loop over the rest of the url and add it to list_of_new_terms, ignoring no digit or no letter chars.
+        # start_index_curr_term = 0
+        # for idx, charr in enumerate(new_term + " "):
+        #     if not charr.isalpha() and not charr.isdigit():
+        #         if start_index_curr_term == idx:
+        #             start_index_curr_term += 1
+        #         else:
+        #             list_of_new_terms.append(new_term[start_index_curr_term:idx])
+        #             start_index_curr_term = idx+1
+        #
+        # return list_of_new_terms
 
     def handle_entitie(self):
         """
@@ -463,8 +470,10 @@ class Parse:
         """
         tweet_id = doc_as_list[0]
         tweet_date = doc_as_list[1]
+        # change the date to format "year/month/day hour"
         splited_tweet_date = tweet_date.split(" ")
         tweet_date = splited_tweet_date[5]+"/"+self.month_dict[splited_tweet_date[1]]+"/"+splited_tweet_date[2]+" "+splited_tweet_date[3]
+
         full_text = doc_as_list[2]
         url = doc_as_list[3]
         retweet_text = doc_as_list[4]

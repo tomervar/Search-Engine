@@ -37,27 +37,42 @@ class Indexer:
                     self.inverted_idx[term] += 1
 
                 f_ij = document_dictionary[term]
-                # tf_ij = f_ij / document.max_tf
+                # tf_ij = f_ij / document.max_tf #can change the way of normalization
                 tf_ij = f_ij / len(document_dictionary.keys())
+                # add to postingDict[term] list of [doc_id, frequency in doc, tf_ij, doc date]
                 self.postingDict[term].append([document.tweet_id, document_dictionary[term], tf_ij, document.tweet_date])
 
             except:
                 print('problem with the following key {}'.format(term[0]))
+        # save all the doc terms to calculate sqrt(w_ij^2)
         self.terms_in_docs[document.tweet_id] = list(document_dictionary.keys())
 
     def add_idf_to_inverted_index(self, corpus_size):
+        """
+        calculate the idf to each term and add it to inverted index dictionary.
+        :param corpus_size: number of documents in corpus
+        :return:
+        """
         for term in self.inverted_idx.keys():
             d_ft = self.inverted_idx[term]
             idf_t = math.log2((corpus_size/d_ft))
             self.inverted_idx[term] = (d_ft, idf_t)
 
     def build_weight_of_docs(self):
+        """
+        calculate sqrt(w_ij^2) and save it in weight_of_docs dictionary.
+        :return:
+        """
         for tweet_id in self.terms_in_docs.keys():
             segma_w_ij_pow_of_doc = 0
+
+            # calculate w_ij^2 for all docs in corpus
             for term in self.terms_in_docs[tweet_id]:
+                # change the term to upper case if needed
                 if term.upper() in self.postingDict:
                     term = term.upper()
                 for list_in_posting in self.postingDict[term]:
+                    # if we find in self.postingDict[term] the doc_id that we calculate the weight now.
                     if tweet_id == list_in_posting[0]:
                         tf = list_in_posting[2]
                         idf = self.inverted_idx[term][1]
@@ -65,15 +80,22 @@ class Indexer:
                         list_in_posting.append(tf_idf)
                         tf_idf_pow = math.pow(tf_idf, 2)
                         segma_w_ij_pow_of_doc += tf_idf_pow
+                        # the doc appear only once in list_in_posting.
                         break
 
             sqrt_of_segma_w_ij_pow = math.sqrt(segma_w_ij_pow_of_doc)
             self.weight_of_docs[tweet_id] = sqrt_of_segma_w_ij_pow
 
+        # clear the dictionary to save memory
         self.terms_in_docs = {}
 
     def handle_capital_letters(self, parser):
-        # remove from upper case dict all the falses and update inverted and posting
+        """
+        change the way we save the word in inverted index if needed according to partA rules.
+        :param parser:
+        :return:
+        """
+        # remove from upper case dict all the falses and update inverted index and posting dicts
         list_of_upper_case = list(parser.upper_case_dict.keys())
         for word in list_of_upper_case:
             if not parser.upper_case_dict[word]:
@@ -121,6 +143,11 @@ class Indexer:
         return self.postingDict[term] if self._is_term_exist(term) else []
 
     def remove_all_the_term_with_1_appearance(self):
+        """
+        remove from inverted index and posting dicts all the terms that we found only once in corpus.
+        we believe that if word appear only once, its not that important to the retrieve.
+        :return:
+        """
         list_of_terms = list(self.inverted_idx.keys())
         for term in list_of_terms:
             if self.inverted_idx[term][0] == 1:

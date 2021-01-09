@@ -10,7 +10,9 @@ import utils
 
 # DO NOT CHANGE THE CLASS NAME
 class SearchEngine:
-
+    """
+    in this search engine we send to wordNet method
+    """
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation, but you must have a parser and an indexer.
     def __init__(self, config=None):
@@ -40,15 +42,19 @@ class SearchEngine:
             # index the document data
             self._indexer.add_new_doc(parsed_document)
 
+        # handle the case of capital letters according to partA rules.
         self._indexer.handle_capital_letters(self._parser)
+
         self._indexer.add_idf_to_inverted_index(self.number_of_documents_in_corpus)
+        # build dict of {doc_id : sqrt(w_ij^2) ...}
         self._indexer.build_weight_of_docs()
 
         self._indexer.remove_all_the_term_with_1_appearance()
 
+        # sort the inverted index and postiong dicts in alphabet order
         self._indexer.inverted_idx = collections.OrderedDict(sorted(self._indexer.inverted_idx.items()))
         self._indexer.postingDict = collections.OrderedDict(sorted(self._indexer.postingDict.items()))
-        print('Finished parsing and indexing.')
+        # print('Finished parsing and indexing.')
 
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.
