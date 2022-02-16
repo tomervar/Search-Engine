@@ -1,3 +1,2 @@
 # Search_Engine
-The is a skeleton of a search engine project for your convenience.
-Please follow the instructions provided in the file: intructions.txt
+After building the search engine over 10 milion tweets (SearchEngine repository), in this part we used a benchmark of ranked tweets in order to improve our exsisting search engine results - using several evaluation parameters such as recall, precision and MAP. We added few more NLP models, improved our parser and made it as efficient as possible.
